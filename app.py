@@ -3,7 +3,7 @@ import sqlite3
 import datetime
 
 from flask_cors import CORS
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_jwt import JWT, jwt_required, current_identity
 
 
@@ -105,6 +105,7 @@ def user_registration():
             response["message"] = "success"
             response["status_code"] = 201
         return response
+    return render_template('register-user.html')
 
 @app.route('/create-blog/', methods=["POST"])
 @jwt_required()
@@ -126,7 +127,7 @@ def created_blog():
             response["status_code"] = 201
             response['description'] = "Blog post added successfully"
         return response
-
+    return render_template('create.html')
 
 @app.route('/get-blogs/', methods=["GET"])
 def get_blogs():
