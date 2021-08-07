@@ -1,6 +1,7 @@
 import hmac
 import sqlite3
-import datetime
+
+from datetime import *
 
 from flask_cors import CORS
 from flask import Flask, request, jsonify, render_template
@@ -53,6 +54,7 @@ def innit_post_table():
     print("blog table created successfully")
     conn.close()
 
+
 init_user_table()
 innit_post_table()
 
@@ -75,6 +77,7 @@ app = Flask(__name__)
 CORS(app)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
+app.config["JWT_EXPIRATION_DELTA"] = timedelta(days=1)
 
 jwt = JWT(app, authenticate, identity)
 
@@ -83,6 +86,7 @@ jwt = JWT(app, authenticate, identity)
 @jwt_required()
 def protected():
     return '%s' % current_identity
+
 
 @app.route('/user-registration/', methods=["POST"])
 def user_registration():
@@ -104,8 +108,10 @@ def user_registration():
             conn.commit()
             response["message"] = "success"
             response["status_code"] = 201
+
         return response
     return render_template('register-user.html')
+
 
 @app.route('/create-blog/', methods=["POST"])
 @jwt_required()
@@ -115,7 +121,7 @@ def created_blog():
     if request.method == "POST":
         title = request.form['title']
         content = request.form['content']
-        date_created = datetime.datetime.now()
+        date_created = str('Date: ') + datetime.now().date().strftime("%Y-%m-%d") + ' ' + str('Time: ') + datetime.now().time().strftime('%H:%M:%S')
 
         with sqlite3.connect('blog.db') as conn:
             cursor = conn.cursor()
@@ -128,6 +134,7 @@ def created_blog():
             response['description'] = "Blog post added successfully"
         return response
     return render_template('create.html')
+
 
 @app.route('/get-blogs/', methods=["GET"])
 def get_blogs():
@@ -143,6 +150,7 @@ def get_blogs():
     response['data'] = posts
     return response
 
+
 @app.route("/delete-post/<int:post_id>")
 @jwt_required()
 def delete_post(post_id):
@@ -155,7 +163,8 @@ def delete_post(post_id):
         response['message'] = "Blog post deleted successfully"
     return response
 
-@app.route('/edit-post/<int:post_id>', methods = ['PUT'])
+
+@app.route('/edit-post/<int:post_id>', methods=['PUT'])
 @jwt_required()
 def edit_post(post_id):
     response = {}
@@ -186,7 +195,8 @@ def edit_post(post_id):
                     response['status_code'] = 200
     return response
 
-@app.route('/get-post/<int:post_id>', methods = ['GET'])
+
+@app.route('/get-post/<int:post_id>', methods=['GET'])
 def get_post(post_id):
     response = {}
 
